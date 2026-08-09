@@ -212,6 +212,27 @@ public class UClass : UStruct
                         label = flow.ObjectPath.ToString().Split('.').Last().Split('[')[0];
                         offset = (int) flow.PushingAddress;
                         break;
+                    case EX_Context_FailSilent context:
+                        if (context.ContextExpression is EX_FinalFunction finalFunc)
+                        {
+                            
+                            if (finalFunc.StackNode.ToString().Contains("KismetSystemLibrary") && finalFunc.StackNode.ToString().Contains("Delay"))
+                            {
+                                foreach (var parameter in finalFunc.Parameters)
+                                {
+                                    if (parameter is EX_StructConst structConst && structConst.Struct.Name.Contains("LatentActionInfo"))
+                                    {
+                                        if (structConst.Properties.FirstOrDefault() is EX_SkipOffsetConst skipOffsetConst)
+                                        {
+                                            var skipOffsetValue = skipOffsetConst.Value;
+                                            offset = (int) skipOffsetValue;
+                                            label = function.Name;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
                 }
 
                 if (!string.IsNullOrEmpty(label) && offset.HasValue)
