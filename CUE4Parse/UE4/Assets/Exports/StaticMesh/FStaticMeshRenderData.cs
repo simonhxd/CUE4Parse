@@ -170,7 +170,7 @@ public class FStaticMeshRenderData
             }
             else
             {
-                bLODsShareStaticLighting = Ar.ReadBoolean();
+                //bLODsShareStaticLighting = Ar.ReadBoolean();
             }
         }
 
