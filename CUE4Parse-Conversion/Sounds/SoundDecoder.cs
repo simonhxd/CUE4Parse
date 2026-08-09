@@ -1,4 +1,4 @@
-﻿using CUE4Parse_Conversion.Sounds.ADPCM;
+using CUE4Parse_Conversion.Sounds.ADPCM;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Sound.Node;
@@ -142,6 +142,8 @@ public static class SoundDecoder
             case "OPUS":
             case "WEM":
             case "AT9":
+            case "XMA":
+            case "PCM1000":
                 return input;
 
             default:
