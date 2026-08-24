@@ -2,6 +2,7 @@ using System.Text;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -14,9 +15,12 @@ public class FKismetPropertyPointer
     public FPackageIndex? Old;
     public FFieldPath? New;
 
+    /** Whether property pointers are serialized as a FFieldPath instead of an object index */
+    public static bool UsesFieldPath(FArchive Ar) => Ar.Game >= GAME_UE4_25 || Ar.Game is GAME_AssaultFireFuture;
+
     public FKismetPropertyPointer(FKismetArchive Ar)
     {
-        if (Ar.Game >= GAME_UE4_25 || Ar.Game is GAME_AssaultFireFuture)
+        if (UsesFieldPath(Ar))
         {
             New = new FFieldPath(Ar);
         }

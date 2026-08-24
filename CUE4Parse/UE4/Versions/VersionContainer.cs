@@ -93,6 +93,7 @@ namespace CUE4Parse.UE4.Versions
             Options["VirtualTextures"] = Game >= GAME_UE4_23;
             Options["SoundWave.UseAudioStreaming"] = Game >= GAME_UE4_25 && OverrideUseAudioStreaming(); // A lot of games use this, but some don't, which causes issues.
             Options["AnimSequence.HasCompressedRawSize"] = Game >= GAME_UE4_17; // Early 4.17 builds don't have this, and some custom engine builds don't either.
+            Options["FFieldPath.HasOwnerSerialization"] = Game >= GAME_UE4_25 || Game is GAME_AssaultFireFuture; // Created in 4.25 development, so early 4.25 builds still write the full property path.
             Options["StaticMesh.HasNavCollision"] = Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_STORE_NAV_COLLISION && Game != GAME_GearsOfWar4 && Game != GAME_TEKKEN7;
 
             // special general property workarounds
