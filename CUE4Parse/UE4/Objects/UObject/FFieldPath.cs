@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -15,16 +16,31 @@ public class FFieldPath
         ResolvedOwner = new FPackageIndex();
     }
 
+    /**
+     * Whether the owner struct is serialized alongside a short path to the property instead of the full path.
+     */
+    public static bool HasOwnerSerialization(FArchive Ar)
+    {
+        if (!Ar.Versions["FFieldPath.HasOwnerSerialization"]) return false;
+
+        return FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.FFieldPathOwnerSerialization ||
+               FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.FFieldPathOwnerSerialization;
+    }
+
     public FFieldPath(FAssetArchive Ar) : this()
     {
         Path = Ar.ReadArray(() => Ar.ReadFName());
         // The old serialization format could save 'None' paths, they should be just empty
         if (Path.Length == 1 && Path[0].IsNone) Path = [];
 
-        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.FFieldPathOwnerSerialization ||
-            FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.FFieldPathOwnerSerialization)
+        if (HasOwnerSerialization(Ar))
         {
             ResolvedOwner = new FPackageIndex(Ar);
+        }
+        else
+        {
+            // The full path is all there is, there is no owner to resolve the property against
+            ResolvedOwner = null;
         }
     }
 
@@ -35,10 +51,14 @@ public class FFieldPath
         // The old serialization format could save 'None' paths, they should be just empty
         if (Path.Length == 1 && Path[0].IsNone) Path = [];
 
-        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.FFieldPathOwnerSerialization ||
-            FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.FFieldPathOwnerSerialization)
+        if (Ar.bFieldPathOwnerSerialization)
         {
             ResolvedOwner = new FPackageIndex(Ar);
+        }
+        else
+        {
+            // The full path is all there is, there is no owner to resolve the property against
+            ResolvedOwner = null;
         }
 
         Ar.Index = index + 8;

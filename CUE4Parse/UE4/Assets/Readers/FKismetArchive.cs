@@ -19,12 +19,16 @@ public class FKismetArchive : FArchive
     public readonly IPackage Owner;
     public int Index;
 
+    /** See <see cref="FFieldPath.HasOwnerSerialization"/>. Cached here so a mis-detected script can be re-read with it flipped. */
+    public bool bFieldPathOwnerSerialization;
+
     public FKismetArchive(string name, byte[] data, IPackage owner, VersionContainer? versions = null) : base(versions)
     {
         _data = data;
         Name = name;
         Owner = owner;
         Length = _data.Length;
+        bFieldPathOwnerSerialization = FFieldPath.HasOwnerSerialization(this);
     }
 
     public KismetExpression ReadExpression()
@@ -264,5 +268,8 @@ public class FKismetArchive : FArchive
         return result;
     }
 
-    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions) {Position = Position};
+    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions)
+    {
+        Position = Position, bFieldPathOwnerSerialization = bFieldPathOwnerSerialization
+    };
 }

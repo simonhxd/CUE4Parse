@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UStruct : UField
 {
-    
+
     public FPackageIndex SuperStruct;
     public FPackageIndex[] Children;
     public FField[] ChildProperties;
@@ -46,28 +46,56 @@ public class UStruct : UField
 
         if (Ar.Owner!.Provider?.ReadScriptData == true && serializedScriptSize > 0)
         {
-            using var kismetAr = new FKismetArchive(Name, Ar.ReadBytes(serializedScriptSize), Ar.Owner, Ar.Versions);
-            var tempCode = new List<KismetExpression>();
-            try
+            var scriptData = Ar.ReadBytes(serializedScriptSize);
+            var bFieldPathOwnerSerialization = FFieldPath.HasOwnerSerialization(Ar);
+            if (!TryReadBytecode(Ar, scriptData, bytecodeBufferSize, bFieldPathOwnerSerialization, out ScriptBytecode, out var error) &&
+                bFieldPathOwnerSerialization && FKismetPropertyPointer.UsesFieldPath(Ar))
             {
-                while (kismetAr.Position < kismetAr.Length)
+                /* Early 4.25 builds predate FFieldPathOwnerSerialization, so their property pointers carry no owner
+                index. Unversioned packages don't say which layout they use, so fall back to the other one. */
+                if (TryReadBytecode(Ar, scriptData, bytecodeBufferSize, false, out var retriedCode, out _))
                 {
-                    tempCode.Add(kismetAr.ReadExpression());
+                    ScriptBytecode = retriedCode;
+                    error = null;
                 }
             }
-            catch (Exception e)
-            {
-                Log.Warning(e, "Failed to serialize script bytecode in {Name}", Name);
-            }
-            finally
-            {
-                ScriptBytecode = [.. tempCode];
-            }
+
+            if (error != null) Log.Warning(error, "Failed to serialize script bytecode in {Name}", Name);
         }
         else
         {
             Ar.Position += serializedScriptSize;
         }
+    }
+
+    /**
+     * Reads the whole script buffer. Returns whether it was read cleanly, meaning every serialized byte was consumed
+     * and the expressions added up to the bytecode buffer size the engine wrote out.
+     */
+    private bool TryReadBytecode(FAssetArchive Ar, byte[] scriptData, int bytecodeBufferSize,
+        bool bFieldPathOwnerSerialization, out KismetExpression[] bytecode, out Exception? error)
+    {
+        using var kismetAr = new FKismetArchive(Name, scriptData, Ar.Owner!, Ar.Versions)
+        {
+            bFieldPathOwnerSerialization = bFieldPathOwnerSerialization
+        };
+
+        var tempCode = new List<KismetExpression>();
+        error = null;
+        try
+        {
+            while (kismetAr.Position < kismetAr.Length)
+            {
+                tempCode.Add(kismetAr.ReadExpression());
+            }
+        }
+        catch (Exception e)
+        {
+            error = e;
+        }
+
+        bytecode = [.. tempCode];
+        return error == null && kismetAr.Position == kismetAr.Length && kismetAr.Index == bytecodeBufferSize;
     }
 
     private void DeserializeProperties(FAssetArchive Ar)
