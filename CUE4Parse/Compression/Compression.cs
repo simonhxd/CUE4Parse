@@ -86,7 +86,7 @@ public static class Compression
         CompressionAlgorithm algorithm = method switch
         {
             CompressionMethod.None => 0,
-            CompressionMethod.Zlib or CompressionMethod.XB1Zlib or CompressionMethod.XboxOneGDKZlib => CompressionAlgorithm.Zlib,
+            CompressionMethod.Zlib or CompressionMethod.XB1Zlib or CompressionMethod.XboxOneZlib or CompressionMethod.XboxOneGDKZlib => CompressionAlgorithm.Zlib,
             CompressionMethod.Gzip => CompressionAlgorithm.Gzip,
             CompressionMethod.Oodle => CompressionAlgorithm.Oodle,
             CompressionMethod.LZ4 => CompressionAlgorithm.LZ4,
