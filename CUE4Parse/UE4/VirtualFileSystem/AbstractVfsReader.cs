@@ -49,8 +49,13 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         protected void ValidateMountPoint(ref string mountPoint)
         {
             var badMountPoint = !mountPoint.StartsWith("../../..");
+
+            // Hacky fix but works for now
+            if (badMountPoint && Game >= GAME_UE6_0)
+                return;
+
             mountPoint = mountPoint.SubstringAfter("../../..");
-            if (mountPoint == "" || mountPoint[0] != '/' || ( (mountPoint.Length > 1) && (mountPoint[1] == '.') ))
+            if (mountPoint == "" || mountPoint[0] != '/' || ((mountPoint.Length > 1) && (mountPoint[1] == '.')))
                 badMountPoint = true;
 
             if (badMountPoint)
@@ -63,7 +68,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 mountPoint = "/";
             }
 
-            mountPoint = mountPoint[1..];
+            if (mountPoint.StartsWith('/'))
+                mountPoint = mountPoint[1..];
             VerifyReadOrder();
         }
 
@@ -85,7 +91,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                     if (int.TryParse(versionString, out var chunkVersionSigned) && chunkVersionSigned >= 1)
                     {
                         // Increment by one so that the first patch file still gets more priority than the base pak file
-                        chunkVersionNumber = (uint)chunkVersionSigned + 1;
+                        chunkVersionNumber = (uint) chunkVersionSigned + 1;
                     }
                 }
             }
@@ -128,7 +134,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 return false;
             // Calculate the pos of the null terminator for this string
             // Then read the null terminator byte and check whether it is actually 0
-            if (mountPointLength == 0) return reader.Read<byte>() == 0;
+            if (mountPointLength == 0)
+                return reader.Read<byte>() == 0;
             if (mountPointLength < 0)
             {
                 // UTF16
