@@ -16,7 +16,8 @@ public abstract class TPerPlatformProperty<T> : IUStruct where T : notnull
 
     public TPerPlatformProperty(FAssetArchive Ar, Func<T> getValue)
     {
-        bCooked = Ar.ReadBoolean();
+        //bCooked = Ar.ReadBoolean();
+        bCooked = Ar.ReadBoolean(true);
         Default = getValue();
         if (!bCooked && (Ar.Game is >= GAME_UE5_8 || Ar.IsFilterEditorOnly))
         {
