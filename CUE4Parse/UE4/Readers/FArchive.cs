@@ -386,6 +386,25 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual bool ReadBoolean(Boolean returnException)
+        {
+            var i = Read<int>();
+            try
+            {
+                return i switch
+                {
+                    0 => false,
+                    1 => true
+                };
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, $"Invalid bool value ({i}), returning {returnException}");
+                return returnException; //hopefully this doesnt cause issues -nam
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadFlag()
         {
             var i = Read<byte>();
